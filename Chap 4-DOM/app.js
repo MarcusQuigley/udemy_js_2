@@ -24,7 +24,7 @@ function setup(){
     initControls();
     btnNew.addEventListener('click', newGame);
     btnRoll.addEventListener('click', rollDice);
-    dbtnHold.addEventListener('click', hold);
+    btnHold.addEventListener('click', hold);
     btnRoll.style.display = 'none';
     btnHold.style.display = 'none';
 }
@@ -50,8 +50,7 @@ function newGame(  ){
 
 function setWinningScore(){
     var tempVal = document.querySelector('.winning-score-input').value;
-  
-    (tempVal === "" || isNaN(tempVal)) ?  winningScore = 100 : winningScore = tempVal;
+    tempVal === "" || isNaN(tempVal) ?  winningScore = 100 : winningScore = tempVal;
    
     console.log(`winning score is ${winningScore}`);
 }
@@ -65,7 +64,7 @@ function rollDice( ){
     displayDice(dice);
     if (dice == 1){
         changePlayer();
-    } else if (dice == 6 && previousDice == 6){
+    } else if (dice === 6 && previousDice === 6){
         scores[currentPlayer] = 0
         document.getElementById(`score-${currentPlayer}`).textContent = 0;
         changePlayer();
@@ -74,9 +73,7 @@ function rollDice( ){
         previousDice = dice;
         document.getElementById(`current-${currentPlayer}`).textContent = currentScore;
     }  
-
-
-}
+ }
 
 function displayDice(dice){
  
