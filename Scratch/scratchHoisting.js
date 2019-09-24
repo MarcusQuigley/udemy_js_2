@@ -101,8 +101,8 @@
 // function b() {
 //     a = 10;
 //     console.log(a);
-// 	return;
-// 	function a() {}
+// return;
+// function a() {}
 // }
 // b();
 // console.log(a);
@@ -111,24 +111,28 @@
 // //becomes
 // // function b() {
 // //     function a() {}
-// //     a = 10;  
+// //     a = 10;
 // //  console.log(a);
-// // 	return;
-	
+// // return;
+
 // // }
 // // var a;
 // // a=1;
 // // b();
 // // alert(a); //1
+/* eslint-disable*/
+let a = 1;
+var xxx = "we";
 
- 
-var a = 1;
+
 function b() {
     console.log(a);
     a = 10;
-   // console.log(a);
-	return;
-	function a() {}
+    // console.log(a);
+    return;
+
+    function a() {}
 }
 b();
+/* eslint-disable-next-line*/
 console.log(a);
