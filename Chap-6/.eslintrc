@@ -1,0 +1,25 @@
+{
+	"extends": [
+		"airbnb"
+	],
+	"env": {
+		"browser": true
+	},
+	"rules": {
+		"linebreak-style": ["error", "windows"],
+		"spaced-comment": [
+			"error",
+			"always",
+			{
+				"markers": ["/"]
+			}
+		],
+
+		//	"no-var": "off",
+		"no-console": "off",
+		"eol-last": "off",
+		"indent": [2, "tab"],
+		"no-tabs": "off"
+	}
+
+}
