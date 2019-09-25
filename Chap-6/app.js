@@ -19,6 +19,8 @@ const budgetController = (function () {
 			exp: 0,
 			inc: 0,
 		},
+		budget: 0,
+		percentage: -1,
 	};
 
 	// adds 1 to id of last entry in allitems array(based on type)
@@ -27,6 +29,14 @@ const budgetController = (function () {
 			return data.allItems[type][data.allItems[type].length - 1].id + 1;
 		}
 		return 1;
+	}
+
+	function calculateTotal(type) {
+		let sum = 0;
+		data.allItems[type].forEach((item) => {
+			sum += item.value;
+		});
+		data.totals[type] = sum;
 	}
 
 	const Income = function (id, description, value) {
@@ -43,6 +53,29 @@ const budgetController = (function () {
 			data.totals[type] += 1;
 			return newItem;
 		},
+		calculateBudget() {
+			// calc total income and expenses
+			calculateTotal('exp');
+			calculateTotal('inc');
+			// calc budget: income - expenses
+			data.budget = data.totals.inc - data.totals.exp;
+			// calc % of income spent
+			if (data.totals.inc > 0) {
+				data.percentage = Math.round(data.totals.exp / data.totals.inc * 100);
+			} else {
+				data.percentage = -1;
+			}
+		},
+
+		getBudget() {
+			return {
+				budget: data.budget,
+				percentage: data.percentage,
+				totalExpenses: data.totals.exp,
+				totalIncome: data.totals.inc,
+			};
+		},
+
 		testing() {
 			console.log(data);
 		},
@@ -58,16 +91,11 @@ const uiController = (function () {
 		inputBtn: '.add__btn',
 		incomeContainer: '.income__list',
 		expensesContainer: '.expenses__list',
+		budgetLabel: '.budget__value',
+		totalIncomeLabel: '.budget__income--value',
+		totalExpensesLabel: '.budget__expenses--value',
+		totalPercentagesLabel: '.budget__expenses--percentage',
 	};
-
-	function clearFields() {
-		const elements = document.querySelectorAll(`${DOMstrings.inputDescription}, ${DOMstrings.inputValue}`);
-		const fields = Array.prototype.slice.call(elements);
-		fields.forEach((field) => {
-			field.value = '';
-		});
-		fields[0].focus();
-	}
 
 	return {
 		getInput() {
@@ -107,6 +135,22 @@ const uiController = (function () {
 			});
 			fields[0].focus();
 		},
+		setupUI() {
+			document.querySelector(DOMstrings.budgetLabel).textContent = 0;
+			document.querySelector(DOMstrings.totalIncomeLabel).textContent = 0;
+			document.querySelector(DOMstrings.totalExpensesLabel).textContent = 0;
+			document.querySelector(DOMstrings.totalPercentagesLabel).textContent = '---';
+		},
+
+		displayBudget(data) {
+			console.log(data);
+			document.querySelector(DOMstrings.budgetLabel).textContent = data.budget;
+			document.querySelector(DOMstrings.totalIncomeLabel).textContent = data.totalIncome;
+			document.querySelector(DOMstrings.totalExpensesLabel).textContent = data.totalExpenses;
+			const percentLabel = (data.percentage > 0) ? `${data.percentage}%` : '---';
+
+			document.querySelector(DOMstrings.totalPercentagesLabel).textContent = percentLabel;
+		},
 
 		getDOMStrings() {
 			return DOMstrings;
@@ -118,7 +162,10 @@ const uiController = (function () {
 const controller = (function (budgetCtrl, uiCtrl) {
 	function updateBudget() {
 		// calc budget
+		budgetCtrl.calculateBudget();
+		const budgetData = budgetController.getBudget();
 		// display budget
+		uiCtrl.displayBudget(budgetData);
 	}
 
 	function addItem() {
@@ -148,6 +195,7 @@ const controller = (function (budgetCtrl, uiCtrl) {
 	return {
 		init() {
 			setupEventListeners();
+			uiCtrl.setupUI();
 		},
 	};
 }(budgetController, uiController));
