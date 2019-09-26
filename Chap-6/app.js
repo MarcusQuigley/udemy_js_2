@@ -76,6 +76,17 @@ const budgetController = (function () {
 			};
 		},
 
+		deleteItem(itemToDelete) {
+			const itemSplit = itemToDelete.split('-');
+			const type = itemSplit[0];
+			const id = parseInt(itemSplit[1], 10);
+			const index = data.allItems[type].findIndex(_item => id === _item.id);
+			if (index > -1) {
+				// data.totals[type] -= item.value;
+				data.allItems[type].splice(index, 1);
+			}
+		},
+
 		testing() {
 			console.log(data);
 		},
@@ -95,6 +106,7 @@ const uiController = (function () {
 		totalIncomeLabel: '.budget__income--value',
 		totalExpensesLabel: '.budget__expenses--value',
 		totalPercentagesLabel: '.budget__expenses--percentage',
+		itemsContainer: '.container',
 	};
 
 	return {
@@ -109,12 +121,12 @@ const uiController = (function () {
 			let html;
 			let comboBoxElement;
 			if (itemType === 'inc') {
-				html = `<div class="item clearfix" id = "income-%id%"><div class="item__description">%description%</div><div class="right clearfix">
+				html = `<div class="item clearfix" id = "inc-%id%"><div class="item__description">%description%</div><div class="right clearfix">
 				<div class="item__value"> + %value%</div><div class="item__delete"><button class="item__delete--btn">
 			<i class="ion-ios-close-outline"></i></button></div></div></div>`;
 				comboBoxElement = DOMstrings.incomeContainer;
 			} else {
-				html = `<div class="item clearfix" id="%id%""><div class="item__description">%description%</div>
+				html = `<div class="item clearfix" id="exp-%id%""><div class="item__description">%description%</div>
 				<div class="right clearfix"><div class="item__value">- %value%</div><div class="item__percentage">21%</div>
 				<div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>`;
 				comboBoxElement = DOMstrings.expensesContainer;
@@ -127,6 +139,11 @@ const uiController = (function () {
 			document.querySelector(comboBoxElement).insertAdjacentHTML('beforeend', newHtml);
 			// clearFields();
 		},
+		deleteItem(item) {
+			const elementToDelete = document.getElementById(item);
+			elementToDelete.parentNode.removeChild(elementToDelete);
+		},
+
 		clearFields() {
 			const elements = document.querySelectorAll(`${DOMstrings.inputDescription}, ${DOMstrings.inputValue}`);
 			const fields = Array.prototype.slice.call(elements);
@@ -143,7 +160,6 @@ const uiController = (function () {
 		},
 
 		displayBudget(data) {
-			console.log(data);
 			document.querySelector(DOMstrings.budgetLabel).textContent = data.budget;
 			document.querySelector(DOMstrings.totalIncomeLabel).textContent = data.totalIncome;
 			document.querySelector(DOMstrings.totalExpensesLabel).textContent = data.totalExpenses;
@@ -171,7 +187,6 @@ const controller = (function (budgetCtrl, uiCtrl) {
 	function addItem() {
 		// get input data
 		const input = uiCtrl.getInput();
-		console.log(input);
 		if (input.description !== '' && !Number.isNaN(input.value) && input.value > 0) {
 			// add item to budget controller
 			const newItem = budgetCtrl.addItem(input.type, input.description, input.value);
@@ -182,9 +197,21 @@ const controller = (function (budgetCtrl, uiCtrl) {
 		uiCtrl.clearFields();
 	}
 
+	function deleteItem(event) {
+		const itemId = event.target.parentNode.parentNode.parentNode.parentNode.id;
+		if (itemId) {
+			// delete from buidget controller
+			budgetCtrl.deleteItem(itemId);
+			// delete from UI
+			uiCtrl.deleteItem(itemId);
+			updateBudget();
+		}
+	}
+
 	function setupEventListeners() {
 		const RETURN_CODE = 13;
 		document.querySelector(uiCtrl.getDOMStrings().inputBtn).addEventListener('click', addItem);
+		document.querySelector(uiCtrl.getDOMStrings().itemsContainer).addEventListener('click', deleteItem);
 		document.addEventListener('keypress', (event) => {
 			if (event.keyCode === RETURN_CODE || event.which === RETURN_CODE) {
 				addItem();
