@@ -128,6 +128,7 @@ const uiController = (function () {
 		totalPercentagesLabel: '.budget__expenses--percentage',
 		itemsContainer: '.container',
 		itemPercentage: '.item__percentage',
+		dateLabel: '.budget__title--month',
 	};
 
 	function formatNumber(number, type) {
@@ -224,6 +225,12 @@ const uiController = (function () {
 			}));
 		},
 
+		displayMonth() {
+			const now = new Date();
+			const year = now.getFullYear();
+			document.querySelector(DOMstrings.dateLabel).textContent = now.getMonth() + ' ' + year;
+		},
+
 		getDOMStrings() {
 			return DOMstrings;
 		},
@@ -286,6 +293,7 @@ const controller = (function (budgetCtrl, uiCtrl) {
 		init() {
 			setupEventListeners();
 			uiCtrl.setupUI();
+			uiCtrl.displayMonth();
 		},
 	};
 }(budgetController, uiController));
