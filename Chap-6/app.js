@@ -8,6 +8,7 @@ const budgetController = (function () {
 		this.id = id;
 		this.description = description;
 		this.value = value;
+		this.percentage = -1;
 	};
 
 	const data = {
@@ -21,6 +22,14 @@ const budgetController = (function () {
 		},
 		budget: 0,
 		percentage: -1,
+	};
+
+	Expense.prototype.calculatePercentage = function (totalIncome) {
+		this.percentage = (totalIncome > 0) ? Math.round((this.value / totalIncome) * 100) : -1;
+	};
+
+	Expense.prototype.getPercentage = function () {
+		return this.percentage;
 	};
 
 	// adds 1 to id of last entry in allitems array(based on type)
@@ -67,6 +76,17 @@ const budgetController = (function () {
 			}
 		},
 
+		calculatePercentages() {
+			data.allItems.exp.forEach((item) => {
+				item.calculatePercentage(data.totals.inc);
+			});
+		},
+
+		getPercentages() {
+			const allPercentages = data.allItems.exp.map(current => current.getPercentage());
+			return allPercentages;
+		},
+
 		getBudget() {
 			return {
 				budget: data.budget,
@@ -107,7 +127,31 @@ const uiController = (function () {
 		totalExpensesLabel: '.budget__expenses--value',
 		totalPercentagesLabel: '.budget__expenses--percentage',
 		itemsContainer: '.container',
+		itemPercentage: '.item__percentage',
 	};
+
+	function formatNumber(number, type) {
+		let num = Math.abs(number); // returns a number
+		num = num.toFixed(2); // toFixed is a number method. returns a string
+		const numString = num.split('.');
+		const xx = numString[0];
+		let count = 0;
+		const arr = [];
+
+		for (let i = xx.length - 1; i >= 0; i -= 1) {
+			arr.push(xx[i]);
+			if (count % 3 === 2) {
+				arr.push(',');
+			}
+			count += 1;
+		}
+		if (arr[arr.length - 1] === ',') arr.pop();
+		arr.reverse();
+		const newNum = arr.join('');
+		console.log(type);
+		console.log(newNum);
+		return (type === 'exp' ? '-' : '+').concat(' ').concat(newNum).concat('.').concat(numString[1]);
+	}
 
 	return {
 		getInput() {
@@ -122,19 +166,19 @@ const uiController = (function () {
 			let comboBoxElement;
 			if (itemType === 'inc') {
 				html = `<div class="item clearfix" id = "inc-%id%"><div class="item__description">%description%</div><div class="right clearfix">
-				<div class="item__value"> + %value%</div><div class="item__delete"><button class="item__delete--btn">
+				<div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn">
 			<i class="ion-ios-close-outline"></i></button></div></div></div>`;
 				comboBoxElement = DOMstrings.incomeContainer;
 			} else {
 				html = `<div class="item clearfix" id="exp-%id%""><div class="item__description">%description%</div>
-				<div class="right clearfix"><div class="item__value">- %value%</div><div class="item__percentage">21%</div>
+				<div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div>
 				<div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>`;
 				comboBoxElement = DOMstrings.expensesContainer;
 			}
 
 			let newHtml = html.replace('%id%', item.id);
 			newHtml = newHtml.replace('%description%', item.description);
-			newHtml = newHtml.replace('%value%', item.value);
+			newHtml = newHtml.replace('%value%', formatNumber(item.value, itemType));
 
 			document.querySelector(comboBoxElement).insertAdjacentHTML('beforeend', newHtml);
 			// clearFields();
@@ -167,6 +211,18 @@ const uiController = (function () {
 
 			document.querySelector(DOMstrings.totalPercentagesLabel).textContent = percentLabel;
 		},
+		displayPercentages(percentagesArray) {
+			const fields = document.querySelectorAll(DOMstrings.itemPercentage);
+			const nodeListForEach = function (nodeList, callback) {
+				for (let i = 0; i < nodeList.length; i += 1) {
+					callback(nodeList[i], i);
+				}
+			};
+
+			nodeListForEach(fields, ((current, index) => {
+				current.textContent = (percentagesArray[index] > 0) ? `${percentagesArray[index]}%` : '---';
+			}));
+		},
 
 		getDOMStrings() {
 			return DOMstrings;
@@ -184,6 +240,12 @@ const controller = (function (budgetCtrl, uiCtrl) {
 		uiCtrl.displayBudget(budgetData);
 	}
 
+	function updatePercentages() {
+		budgetCtrl.calculatePercentages();
+		const percentages = budgetCtrl.getPercentages();
+		uiCtrl.displayPercentages(percentages);
+	}
+
 	function addItem() {
 		// get input data
 		const input = uiCtrl.getInput();
@@ -193,6 +255,7 @@ const controller = (function (budgetCtrl, uiCtrl) {
 			// add item to UI
 			uiCtrl.addItem(newItem, input.type);
 			updateBudget();
+			updatePercentages();
 		}
 		uiCtrl.clearFields();
 	}
